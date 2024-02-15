@@ -1,0 +1,7 @@
+mian.ipynb filter=lfs diff=lfs merge=lfs -text
+test-balanced.csv filter=lfs diff=lfs merge=lfs -text
+test-unbalanced.csv filter=lfs diff=lfs merge=lfs -text
+train-balanced-sarc.csv.gz filter=lfs diff=lfs merge=lfs -text
+train-balanced-sarcasm.csv filter=lfs diff=lfs merge=lfs -text
+LICENSE filter=lfs diff=lfs merge=lfs -text
+README.md filter=lfs diff=lfs merge=lfs -text
