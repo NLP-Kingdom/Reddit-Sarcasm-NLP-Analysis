@@ -1,20 +1,11 @@
 import pandas as pd
-
-from sklearn.model_selection import KFold
-
-from sklearn.model_selection import train_test_split
 from sklearn.feature_extraction.text import TfidfVectorizer
-
-import numpy as np
 import matplotlib.pyplot as plt
-import seaborn as sns
-import plotly.express as px
-
 from sklearn.model_selection import KFold
-from sklearn.linear_model import LogisticRegression
 from sklearn.metrics import recall_score, precision_score, f1_score, mean_squared_error, make_scorer, accuracy_score
 from sklearn.ensemble import RandomForestClassifier
 from sklearn.model_selection import GridSearchCV, train_test_split
+
 
 raw_df = pd.read_csv('train-balanced-sarcasm.csv')
 raw_df.head()
@@ -79,50 +70,43 @@ def create_dictionary(param_1,param_2):
 # CV in Trees
 # Set Hyperparameter (Lambda) values to cross validate
 max_depth = [2, 5, 10, 15, 20, 25]
-number_of_trees = [51, 101, 151, 201]
+number_of_trees = [50, 100, 150, 200]
 
 cross_validate_result = create_dictionary(number_of_trees, max_depth)
 cross_validate_recall = create_dictionary(number_of_trees, max_depth)
 cross_validate_precision = create_dictionary(number_of_trees, max_depth)
 cross_validate_mse = create_dictionary(number_of_trees, max_depth)
 
-with open('Random Forest CV Summary.txt', 'w') as file:
-    for tree in number_of_trees:
-        for depth in max_depth:
-            print('Depth of Tree : ', depth, ' Number of Trees ', tree)
-            file.write(f'Depth of Tree : {depth}, Number of Trees: {tree}\n')
+for tree in number_of_trees:
+    for depth in max_depth:
+        print('Depth of Tree : ', depth, ' Number of Trees ', tree)
 
-            accuracies = []
-            recall_scores = []
-            precision_scores = []
-            mse_scores = []
+        accuracies = []
+        recall_scores = []
+        precision_scores = []
+        mse_scores = []
 
-            random_forest_cv = RandomForestClassifier(n_estimators=tree, max_depth=depth)
+        random_forest_cv = RandomForestClassifier(n_estimators=tree, max_depth=depth)
 
-            for train_index, test_index in cv.split(X):
-                # change to loc to define the rows in the dataframe
-                X_cv_train, X_cv_test = X[train_index], X[test_index]
-                Y_cv_train, Y_cv_test = Y[train_index], Y[test_index]
+        for train_index, test_index in cv.split(X):
+            # change to loc to define the rows in the dataframe
+            X_cv_train, X_cv_test = X[train_index], X[test_index]
+            Y_cv_train, Y_cv_test = Y[train_index], Y[test_index]
 
-                random_forest_cv.fit(X_cv_train, Y_cv_train)
-                Y_pred = random_forest_cv.predict(X_cv_test)
+            random_forest_cv.fit(X_cv_train, Y_cv_train)
+            Y_pred = random_forest_cv.predict(X_cv_test)
 
-                # Cross-Validation Prediction Error
-                score = random_forest_cv.score(X_cv_test, Y_cv_test)
-                accuracies.append(score)
-                recall_scores.append(recall_score(Y_cv_test, Y_pred))
-                precision_scores.append(precision_score(Y_cv_test, Y_pred))
-                mse_scores.append(mean_squared_error(Y_cv_test, Y_pred))
+            # Cross-Validation Prediction Error
+            score = random_forest_cv.score(X_cv_test, Y_cv_test)
+            accuracies.append(score)
+            recall_scores.append(recall_score(Y_cv_test, Y_pred))
+            precision_scores.append(precision_score(Y_cv_test, Y_pred))
+            mse_scores.append(mean_squared_error(Y_cv_test, Y_pred))
 
-            cross_validate_result[tree][depth] = (sum(accuracies) / len(accuracies))
-            cross_validate_recall[tree][depth] = (sum(recall_scores) / len(recall_scores))
-            cross_validate_precision[tree][depth] = (sum(precision_scores) / len(precision_scores))
-            cross_validate_mse[tree][depth] = (sum(mse_scores) / len(mse_scores))
-
-            file.write(f"Accuracy: {np.mean(accuracies)}\n")
-            file.write(f"Precision: {np.mean(precision_scores)}\n")
-            file.write(f"Recall: {np.mean(recall_scores)}\n")
-            file.write(f"MSE: {np.mean(mse_scores)}\n\n")
+        cross_validate_result[tree][depth] = (sum(accuracies) / len(accuracies))
+        cross_validate_recall[tree][depth] = (sum(recall_scores) / len(recall_scores))
+        cross_validate_precision[tree][depth] = (sum(precision_scores) / len(precision_scores))
+        cross_validate_mse[tree][depth] = (sum(mse_scores) / len(mse_scores))
 
         print("Accuracy : " + str((sum(accuracies) / len(accuracies))))
         print("Precision : " + str((sum(recall_scores) / len(recall_scores))))
@@ -130,20 +114,41 @@ with open('Random Forest CV Summary.txt', 'w') as file:
         print("MSE : " + str((sum(mse_scores) / len(mse_scores))))
         print()
 
-        # Dictionary Summary
-    print('------------------')
-    print('Accuracy : ', cross_validate_result)
-    print('Precision : ', cross_validate_precision)
-    print('Recall : ', cross_validate_recall)
-    print('MSE : ', cross_validate_mse)
+# Dictionary Summary
+print('------------------')
+print('Accuracy : ', cross_validate_result)
+print('Precision : ', cross_validate_precision)
+print('Recall : ', cross_validate_recall)
+print('MSE : ', cross_validate_mse)
 
-    file.write('------------------\n')
-    file.write('Summary\n')
-    file.write('Accuracy Summary:\n')
-    file.write(str(cross_validate_result) + '\n')
-    file.write('Precision Summary:\n')
-    file.write(str(cross_validate_precision) + '\n')
-    file.write('Recall Summary:\n')
-    file.write(str(cross_validate_recall) + '\n')
-    file.write('MSE Summary:\n')
-    file.write(str(cross_validate_mse) + '\n')
+
+## Plotting ##
+
+plt.figure(figsize=(10, 8))
+
+# Define line styles and colors for different number of trees
+line_styles = {50: 'solid', 100: 'dashed', 150: 'dotted', 200: 'dashdot'}
+colors = {'Accuracy': 'blue', 'Precision': 'green', 'Recall': 'red', 'MSE': 'grey'}
+
+# Consolidate plotting data
+metrics = {
+    'Accuracy': cross_validate_result,
+    'Precision': cross_validate_precision,
+    'Recall': cross_validate_recall,
+    'MSE': cross_validate_mse,
+}
+
+# Plotting
+for metric_name, metric_data in metrics.items():
+    for num_trees, depths in metric_data.items():
+        plt.plot(max_depth, [depths[depth] for depth in max_depth],
+                 label=f'{metric_name} ({num_trees} trees)',
+                 linestyle=line_styles[num_trees],
+                 color=colors[metric_name])
+
+plt.title('Model Performance by Max Depth and Number of Trees')
+plt.xlabel('Max Depth')
+plt.ylabel('Metric Value')
+plt.legend(bbox_to_anchor=(1.05, 1), loc='upper left')
+plt.tight_layout()
+plt.show()
