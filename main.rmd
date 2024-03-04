@@ -1,0 +1,74 @@
+---
+title: |
+  | Text Mining for Economics and Finance
+  | Group Assignment Week 6
+author: |
+  | The Business School, Imperial College London
+  | Chen, Zhiyu (CID: 02517659)
+  | Liu, Qianru (CID: 02371934)
+  | Liu, Yixin (CID: 02445245)
+  | Wu, Zhongshi (CID: 02433017)
+date: "26-02-2024"
+---
+
+```{r, echo=FALSE, warning=FALSE, message=FALSE}
+# Run these every time
+library(quanteda)
+library(ggrepel)
+library(textclean)
+library(tidyverse)
+library(glmnet)
+library(sentimentr)
+library(dplyr)
+library(spacyr) # a new one!
+library(politeness) # another new one! And a package I wrote :)
+
+source("TMEF_dfm.R")
+source("kendall_acc.R")
+```
+
+# Read in the data
+
+```{r, echo=FALSE, warning=FALSE, message=FALSE}
+# Read csv
+data <- read.csv("train-balanced-sarcasm.csv")
+
+# show the first few rows
+head(data)
+
+```
+
+# Preprocessing
+
+```{r, echo=FALSE, warning=FALSE, message=FALSE}
+# Preprocessing
+dfm_data <- TMEF_dfm(data$comment, ngrams = 1:2, stop.words = FALSE, min.prop = 0.01)
+
+# extract the labels
+labels <- data$label
+
+# Train models using logistic regression
+set.seed(123) # For reproducibility
+train_index <- sample(1:nrow(data), 0.8*nrow(data))
+train_data <- dfm_data[train_index, ]
+test_data <- dfm_data[-train_index, ]
+train_labels <- labels[train_index]
+test_labels <- labels[-train_index]
+
+# Train the model
+model <- glmnet(train_data, train_labels, family = "binomial", alpha = 1)
+
+# Predict the test data
+predictions <- predict(model, newx = test_data, type = "response")
+
+# Calculate the accuracy
+accuracy <- kendall_acc(predictions, test_labels)
+
+# calculate the acc without using kendall_acc
+accuracy <- mean((predictions > 0.5) == test_labels)
+
+# Show the accuracy
+accuracy
+
+```
+
