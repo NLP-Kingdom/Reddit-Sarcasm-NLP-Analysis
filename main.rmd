@@ -42,7 +42,7 @@ head(data)
 
 ```{r, echo=FALSE, warning=FALSE, message=FALSE}
 # Preprocessing
-dfm_data <- TMEF_dfm(data$comment, ngrams = 1:2, stop.words = FALSE, min.prop = 0.01)
+dfm_data <- TMEF_dfm(data$comment, ngrams = 1:2, stop.words = TRUE, min.prop = 0.01)
 
 # extract the labels
 labels <- data$label
@@ -61,14 +61,11 @@ model <- glmnet(train_data, train_labels, family = "binomial", alpha = 1)
 # Predict the test data
 predictions <- predict(model, newx = test_data, type = "response")
 
-# Calculate the accuracy
-accuracy <- kendall_acc(predictions, test_labels)
-
-# calculate the acc without using kendall_acc
+# calculate the accuracy
 accuracy <- mean((predictions > 0.5) == test_labels)
 
 # Show the accuracy
 accuracy
-
+# 0.6004426
 ```
 
